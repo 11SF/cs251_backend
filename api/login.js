@@ -4,7 +4,7 @@ const jwt = require("jsonwebtoken")
 const bcrypt = require("bcrypt")
 const passport = require('passport')
 
-const SECRET = "CS251_Key"
+const SECRET = ""
 
 // router.post('/login', (req,res,next)=> {
 //     let {citizenID,password,role} = req.body
