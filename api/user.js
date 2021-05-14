@@ -2,11 +2,10 @@ const router = require("express").Router()
 const { query } = require("../config/db");
 let db = require('../config/db')
 
-router.get("/student/get/profile",(req, res,next) => {
-    let CitizenID = req.body.CitizenID
+router.get("/student/get/profile",(req,res) => {
+    let {CitizenID} = req.query
     let sql = ' SELECT * FROM Student WHERE CitizenID = ?'
     let results = []
-
     db.query(sql,[CitizenID],(error, result, fields)=>{
         if(error) {
             throw error
@@ -54,9 +53,9 @@ router.get("/student/get/profile",(req, res,next) => {
 });
 
 router.get('/student/get/advisor', (req,res) => {
-    let sql = ' SELECT citizenID,fullnameTH,fullnameEN FROM advisor WHERE Level = ? AND Room = ?'
-    let {Level,Room} = req.body
-    db.query(sql,[Level,Room],(error, result, fields)=>{
+    let sql = ' SELECT citizenID,fullnameTH,fullnameEN FROM advisor WHERE ClassroomID = ?'
+    let {ClassroomID} = req.query
+    db.query(sql,[ClassroomID],(error, result, fields)=>{
         if(error) {
             throw error
         }   
@@ -74,10 +73,12 @@ router.get('/student/get/advisor', (req,res) => {
 })
 
 router.get("/student/get/subject", (req,res) => {
-    let {StudentCitizenID,ClassroomID,Term} = req.body
+    let {ClassroomID,Term} = req.query
+    console.log(ClassroomID)
     // let sql = 'SELECT * FROM Student_Room_log JOIN Class_Subject_list ON Student_Room_log.ClassroomID = Class_Subject_list.ClassroomID JOIN Assignments ON Class_Subject_list.S_ID = Assignments.S_ID AND Student_Room_log.StudentCitizenID = Assignments.Student_CitizenID WHERE Student_Room_log.StudentCitizenID = ? AND Student_Room_log.ClassroomID = ?'
-    let sql = 'SELECT S_ID,S_name FROM Student_Room_log JOIN Class_Subject_list ON Student_Room_log.ClassroomID = Class_Subject_list.ClassroomID WHERE Student_Room_log.StudentCitizenID = ? AND Student_Room_log.ClassroomID = ? AND Class_Subject_list.Term = ?'
-    db.query(sql,[StudentCitizenID,ClassroomID,Term],(error, results) => {
+    // let sql = 'SELECT S_ID,S_name FROM Student_Room_log JOIN Class_Subject_list ON Student_Room_log.ClassroomID = Class_Subject_list.ClassroomID WHERE Student_Room_log.StudentCitizenID = ? AND Student_Room_log.ClassroomID = ? AND Class_Subject_list.Term = ?'
+    let sql = 'SELECT * FROM Class_Subject_list WHERE ClassroomID = ? AND Term = ?'
+    db.query(sql,[ClassroomID,Term],(error, results) => {
         if(error) {
             throw error
         }   
@@ -96,8 +97,9 @@ router.get("/student/get/subject", (req,res) => {
 })
 
 router.get("/student/get/assignments", (req,res) => {
-    let {CitizenID,S_ID} = req.body
-    let sql = ' SELECT AssignName,ReceiveScore,FullScore FROM Assignments WHERE Student_CitizenID = ? AND S_ID = ?'
+    let {CitizenID,S_ID} = req.query
+    console.log(CitizenID + " " +S_ID);
+    let sql = ' SELECT AssignName,ReceiveScore,FullScore FROM AssignmentList JOIN Assignments ON AssignmentList.S_ID = Assignments.S_ID AND AssignmentList.AssignNo = Assignments.AssignNo WHERE Student_CitizenID = ? AND AssignmentList.S_ID = ?'
     db.query(sql,[CitizenID,S_ID],(error, results, fields) => {
         if(error) {
             throw error
@@ -116,7 +118,7 @@ router.get("/student/get/assignments", (req,res) => {
 })
 
 router.get( '/student/get/historyRoom',(req,res) => {
-    let CitizenID = req.body.CitizenID
+    let CitizenID = req.query.CitizenID
     let sql = 'SELECT * FROM Student_Room_log JOIN Classroom ON Student_Room_log.ClassroomID = Classroom.ClassroomID WHERE StudentCitizenID = ?'
     db.query(sql,CitizenID,(error,result) => {
         if(error) throw error
@@ -125,7 +127,7 @@ router.get( '/student/get/historyRoom',(req,res) => {
 })
 
 router.get('/student/get/gpaTable', (req,res) => {
-    let {CitizenID,ClassroomID,Term} = req.body
+    let {CitizenID,ClassroomID,Term} = req.query
     let sql = 'SELECT SubjectID,SubjectName,Type,Dredit,SchoolRecord.Score,SchoolRecord.Grade FROM Class_Subject_list JOIN Subject ON Class_Subject_list.S_ID = Subject.ID JOIN SchoolRecord ON Subject.ID = SchoolRecord.S_ID WHERE CitizenID = ? AND ClassroomID = ? AND Class_Subject_list.Term = ?'
     db.query(sql, [CitizenID,ClassroomID,Term], (error,result) => {
         if(error) throw error
@@ -142,8 +144,8 @@ router.get('/teacher/get/all',(req,res) => {
 })
 
 router.get('/teacher/get/byDepartment',(req,res) => {
-    let departID = req.body.DepartID
-    let sql = 'SELECT FnameTH,LnameTH,phone,email,Department.Type FROM Staff JOIN Department ON Staff.CitizenID = Department.CitizenID WHERE Department.DepartID = ?'
+    let departID = req.query.DepartID
+    let sql = 'SELECT FnameTH,LnameTH,phone,email,Department.Type,Department_list.departmen_name FROM Staff JOIN Department ON Staff.CitizenID = Department.CitizenID JOIN Department_list ON Department.DepartID = Department_list.department_id WHERE Department.DepartID = ?'
     db.query(sql,departID, (error,result) => {
         if(error) throw error
         res.json(result)
@@ -151,9 +153,9 @@ router.get('/teacher/get/byDepartment',(req,res) => {
 })
 
 router.get('/teacher/get/search',(req,res) => {
-    let keyword = req.body.keyword
+    let keyword = req.query.keyword
     keyword = '%' + keyword + '%'
-    let sql = "SELECT FnameTH,LnameTH,phone,email FROM Staff WHERE FnameTH LIKE ? OR LnameTH LIKE ? OR FnameEN LIKE ? OR LnameEN LIKE ?"
+    let sql = "SELECT FnameTH,LnameTH,phone,email,Department_list.departmen_name,Staff.CitizenID FROM Staff JOIN Department ON Staff.CitizenID = Department.CitizenID JOIN Department_list ON Department.DepartID = Department_list.department_id WHERE FnameTH LIKE ? OR LnameTH LIKE ? OR FnameEN LIKE ? OR LnameEN LIKE ?"
     db.query(sql,[keyword,keyword,keyword,keyword], (error,result) => {
         if(error) throw error
         res.json(result)
@@ -161,8 +163,9 @@ router.get('/teacher/get/search',(req,res) => {
 })
 
 router.get('/teacher/get/byCitizenID',(req,res) => {
-    let CitizenID = req.body.CitizenID
+    let CitizenID = req.query['CitizenID']
     let sql = "SELECT * FROM Staff WHERE CitizenID = ? "
+    console.log(CitizenID)
     db.query(sql,[CitizenID], (error,result) => {
         if(error) throw error
         res.json(result)
@@ -233,7 +236,7 @@ router.post('/poll/vote',(req,res) => {
 })
 
 router.get('/poll/get/permission', (req,res) => {
-    let CitizenID = req.body.CitizenID
+    let CitizenID = req.query.CitizenID
     let sql = 'SELECT * FROM State WHERE Name = ?'
     db.query(sql,['poll'], (error,result) => {
         if(error) throw error
@@ -258,7 +261,7 @@ router.get('/poll/get/permission', (req,res) => {
 })
 
 router.get('/poll/get/vote', (req,res) => {
-    let CitizenID = req.body.CitizenID
+    let CitizenID = req.query.CitizenID
     let sql = 'SELECT T_CitizenID FROM Review_log WHERE S_CitizenID = ?'
     db.query(sql,CitizenID, (error,result) => {
         if(error) throw error
@@ -477,13 +480,25 @@ router.put('/staff/edit',(req,res) => {
 })
 
 router.put('/teacher/delete',(req,res)=> {
-    let {ID} = req.body
+    let {ID} = req.query
     let sql = 'DELETE FROM Staff WHERE ID = ?'
     db.query(sql,ID,(error,result) => {
         if(error) throw error
         res.json({
             "status" : true,
             "msg" : "delete successfully"
+        })
+    })
+})
+router.get('/student/classroom',(req,res) => {
+    let {ClassroomID} = req.query
+    console.log(ClassroomID)
+    let sql = 'SELECT * FROM Classroom WHERE ClassroomID = ?'
+    db.query(sql,ClassroomID,(error,result) => {
+        if(error) throw error
+        res.json({
+            "status" : true,
+            "data" : result
         })
     })
 })
