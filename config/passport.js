@@ -27,6 +27,7 @@ passport.use(new LocalStrategy (
                 })
             } else {
                 return cb(null, false, {
+                    "status" : false,
                     "msg" : "Invalid username or password!!"
                 })
             }
