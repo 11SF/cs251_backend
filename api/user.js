@@ -164,7 +164,7 @@ router.get('/teacher/get/search',(req,res) => {
 
 router.get('/teacher/get/byCitizenID',(req,res) => {
     let CitizenID = req.query['CitizenID']
-    let sql = "SELECT * FROM Staff WHERE CitizenID = ? "
+    let sql = "SELECT * FROM Staff JOIN Department ON Staff.CitizenID = Department.CitizenID JOIN Department_list ON Department.DepartID = Department_list.department_id WHERE Staff.CitizenID = ? "
     console.log(CitizenID)
     db.query(sql,[CitizenID], (error,result) => {
         if(error) throw error
@@ -273,9 +273,9 @@ router.get('/poll/get/vote', (req,res) => {
 })
 
 router.get('/teacher/get/subject', (req,res)=> {
-    let {CitizenID,Term,Year,level} = req.body
-    let sql = 'SELECT * FROM Subject JOIN Class_Subject_list ON Subject.ID = Class_Subject_list.S_ID JOIN Classroom ON Class_Subject_list.ClassroomID = Classroom.ClassroomID WHERE TeacherCitizenID = ? AND Subject.Term = ? AND Subject.Year = ? AND Subject.level = ?'
-    db.query(sql,[CitizenID,Term,Year,level], (error,result) => {
+    let {CitizenID,Term,Year} = req.query
+    let sql = 'SELECT * FROM Subject JOIN Class_Subject_list ON Subject.ID = Class_Subject_list.S_ID JOIN Classroom ON Class_Subject_list.ClassroomID = Classroom.ClassroomID WHERE TeacherCitizenID = ? AND Subject.Term = ? AND Subject.Year = ?'
+    db.query(sql,[CitizenID,Term,Year], (error,result) => {
         if(error) throw error
         res.json({
             "status" : true,
@@ -314,9 +314,9 @@ router.get('/teacher/add/subject/assignment', (req,res) => {
 // })
 
 router.get('/get/student/byClassroom', (req,res) => {
-    let {Level,Room} = req.body
-    let sql = 'SELECT * FROM Student WHERE Level = ? AND Room = ?'
-    db.query(sql,[Level,Room], (error,result) => {
+    let {ClassroomID} = req.query
+    let sql = 'SELECT ID,FnameTH,LnameTH,CitizenID FROM Student WHERE ClassroomID = ?'
+    db.query(sql,[ClassroomID], (error,result) => {
         if(error) throw error
         res.json({
             "status" : true,
@@ -490,6 +490,7 @@ router.put('/teacher/delete',(req,res)=> {
         })
     })
 })
+
 router.get('/student/classroom',(req,res) => {
     let {ClassroomID} = req.query
     console.log(ClassroomID)
@@ -502,4 +503,18 @@ router.get('/student/classroom',(req,res) => {
         })
     })
 })
+
+router.get('/teacher/getAdvisor',(req,res) => {
+    let {CitizenID} = req.query
+    console.log(CitizenID)
+    let sql = 'SELECT * FROM advisor JOIN Classroom ON advisor.ClassroomID = Classroom.ClassroomID WHERE advisor.CitizenID = ?'
+    db.query(sql,CitizenID,(error,result) => {
+        if(error) throw error
+        res.json({
+            "status" : true,
+            "data" : result
+        })
+    })
+})
+
 module.exports = router;

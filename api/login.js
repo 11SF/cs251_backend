@@ -4,7 +4,7 @@ const jwt = require("jsonwebtoken")
 const bcrypt = require("bcrypt")
 const passport = require('passport')
 
-const SECRET = ""
+const SECRET = "CS251_Key"
 
 // router.post('/login', (req,res,next)=> {
 //     let {citizenID,password,role} = req.body
@@ -41,7 +41,8 @@ router.post("/login",(req,res,next) => {
                 id: user.CitizenID,
                 nameTH : user.FnameTH + " " + user.LnameTH,
                 nameEH : user.FnameEN + " " + user.LnameEN,
-                role : role
+                role : role,
+                ClassroomID : user.ClassroomID
             }
             const token = jwt.sign(payload,SECRET)
             return res.json({
