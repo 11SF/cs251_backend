@@ -57,7 +57,7 @@ router.post("/login",(req,res,next) => {
 
 router.post('/academic/login', (req,res) => {
     let {username,password} = req.body
-    let sql = 'SELECT * FROM academicAdmin WHERE username = ? AND password = ?'
+    let sql = 'SELECT * FROM academicAdmin JOIN Staff academicAdmin.citizenID = Staff.CitizenID ON  WHERE academicAdmin.username = ? AND academicAdmin.password = ?'
     db.query(sql,[role,citizenID,password],(error, results, fields)=>{
         if(error) {
             throw error
