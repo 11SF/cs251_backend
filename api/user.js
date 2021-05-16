@@ -285,7 +285,7 @@ router.get('/teacher/get/subject', (req,res)=> {
 })
 
 router.get('/teacher/get/subject/assignment', (req,res) => {
-    let {ClassroomID,S_ID} = req.body
+    let {ClassroomID,S_ID} = req.query
     let sql = 'SELECT AssignNo,AssignName,FullScore FROM AssignmentList WHERE S_ID = ? AND ClassroomID = ?'
     db.query(sql,[S_ID,ClassroomID], (error,result) => {
         if(error) throw error
@@ -297,9 +297,9 @@ router.get('/teacher/get/subject/assignment', (req,res) => {
 })
 
 router.get('/teacher/add/subject/assignment', (req,res) => {
-    let {AssignNo,S_ID,AssignName,FullScore,ClassroomID} = req.body
-    let sql = 'INSERT INTO AssignmentList (AssignNo,S_ID,AssignName,FullScore,ClassroomID) VALUES (?,?,?,?,?)'
-    db.query(sql,[AssignNo,S_ID,AssignName,FullScore,ClassroomID], (error,result) => {
+    let {S_ID,AssignName,FullScore,ClassroomID} = req.query
+    let sql = 'INSERT INTO AssignmentList (S_ID,AssignName,FullScore,ClassroomID) VALUES (?,?,?,?)'
+    db.query(sql,[S_ID,AssignName,FullScore,ClassroomID], (error,result) => {
         if(error) throw error
         res.json({
             "status" : true,
@@ -325,14 +325,26 @@ router.get('/get/student/byClassroom', (req,res) => {
     })
 })
 
-router.put('/teacher/edit/subject/assignment/student', (req,res) => {
-    let {S_ID,AssignNo,Student_CItizenID,ReceiveScore,ClassroomID} = req.body
-    let sql = 'SELECT * FROM Assignments WHERE S_ID = ? AND AssignNo = ? AND Student_CItizenID = ?'
-    db.query(sql, [S_ID,AssignNo,Student_CItizenID,ReceiveScore,ClassroomID], (error,result) => {
+router.get('/teacher/edit/subject/assignment/get',(req,res) => {
+    let {S_ID,AssignNo,Student_CitizenID} = req.query
+    let sql = 'SELECT * FROM Assignments WHERE S_ID = ? AND AssignNo = ? AND Student_CitizenID = ?'
+    db.query(sql,[S_ID,AssignNo,Student_CitizenID], (error,result) => {
+        if(error) throw error
+        res.json({
+            "status" : true,
+            "data" : result
+        })
+    })
+})
+
+router.get('/teacher/edit/subject/assignment/student', (req,res) => {
+    let {S_ID,AssignNo,Student_CitizenID,ReceiveScore,ClassroomID} = req.query
+    let sql = 'SELECT * FROM Assignments WHERE S_ID = ? AND AssignNo = ? AND Student_CitizenID = ?'
+    db.query(sql, [S_ID,AssignNo,Student_CitizenID,ReceiveScore,ClassroomID], (error,result) => {
         if(error) throw error
         if(result == "") {
             sql = 'INSERT INTO Assignments (S_ID,AssignNo,Student_CItizenID,ReceiveScore,ClassroomID) VALUES (?,?,?,?,?)'
-            db.query(sql,[S_ID,AssignNo,Student_CItizenID,ReceiveScore,ClassroomID], (error,result) => {
+            db.query(sql,[S_ID,AssignNo,Student_CitizenID,ReceiveScore,ClassroomID], (error,result) => {
                 if(error) throw error
                 res.json({
                     "status" : true,
@@ -340,8 +352,8 @@ router.put('/teacher/edit/subject/assignment/student', (req,res) => {
                 })
             })
         } else {
-            sql = 'UPDATE  Assignments SET ReceiveScore = ? WHERE S_ID = ? AND AssignNo = ? AND Student_CItizenID = ?'
-            db.query(sql,[ReceiveScore,S_ID,AssignNo,Student_CItizenID], (error,result) => {
+            sql = 'UPDATE  Assignments SET ReceiveScore = ? WHERE S_ID = ? AND AssignNo = ? AND Student_CitizenID = ?'
+            db.query(sql,[ReceiveScore,S_ID,AssignNo,Student_CitizenID], (error,result) => {
                 if(error) throw error
                 res.json({
                     "status" : true,
@@ -349,6 +361,19 @@ router.put('/teacher/edit/subject/assignment/student', (req,res) => {
                 })
             })
         }
+    })
+})
+
+router.get('/teacher/edit/assignment',(req,res) => {
+    let {S_ID,AssignNo,AssignName,FullScore,ClassroomID} = req.query
+    console.log(AssignNo,S_ID,AssignName,FullScore,ClassroomID);
+    sql = 'UPDATE  AssignmentList SET FullScore = ?,AssignName = ? WHERE S_ID = ? AND AssignNo = ? AND ClassroomID = ?'
+    db.query(sql,[FullScore,AssignName,S_ID,AssignNo,ClassroomID], (error,result) => {
+        if(error) throw error
+        res.json({
+            "status" : true,
+            "msg" : "Update successfully"
+        })
     })
 })
 
