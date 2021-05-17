@@ -1,15 +1,15 @@
 const mysql = require('mysql') // เรียกใช้งาน MySQL module
  
-const host = ''
-const username = ''
-const password = ''
+const host = '35.187.239.83'
+const username = 'cs-251-database'
+const password = 'cs251admin'
 
 // กำหนดการเชื่อมต่อฐานข้อมูล
 const db = mysql.createConnection({
     host     : host,
     user     : username,
     password : password,
-    database : ''
+    database : 'cs251'
   })
  
 // ทำการเชื่อมต่อกับฐานข้อมูล 

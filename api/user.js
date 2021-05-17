@@ -145,7 +145,7 @@ router.get('/teacher/get/all',(req,res) => {
 
 router.get('/teacher/get/byDepartment',(req,res) => {
     let departID = req.query.DepartID
-    let sql = 'SELECT FnameTH,LnameTH,phone,email,Department.Type,Department_list.departmen_name FROM Staff JOIN Department ON Staff.CitizenID = Department.CitizenID JOIN Department_list ON Department.DepartID = Department_list.department_id WHERE Department.DepartID = ?'
+    let sql = 'SELECT FnameTH,LnameTH,phone,email,Department.Type,Department_list.departmen_name,Staff.CitizenID FROM Staff JOIN Department ON Staff.CitizenID = Department.CitizenID JOIN Department_list ON Department.DepartID = Department_list.department_id WHERE Department.DepartID = ?'
     db.query(sql,departID, (error,result) => {
         if(error) throw error
         res.json(result)
@@ -492,8 +492,8 @@ router.delete('/student/delete',(req,res)=> {
     })
 })
 
-router.put('/staff/edit',(req,res) => {
-    let {ID,CitizenID,Nickname,FnameTH,LnameTH,FnameEN,LnameEN,Type,Sub_Type,Location,zip,Bdate,Email,Phone} = req.body
+router.get('/staff/edit',(req,res) => {
+    let {ID,CitizenID,Nickname,FnameTH,LnameTH,FnameEN,LnameEN,Type,Sub_Type,Location,zip,Bdate,Email,Phone} = req.query
     let sql = 'UPDATE Staff SET CitizenID = ?, Nickname = ?, FnameTH = ?, LnameTH = ?, FnameEN = ?, LnameEN = ?, Type = ?, Sub_Type = ?, Location = ?, zip = ?, Bdate = ?, Email = ?, Phone = ? WHERE ID = ?' 
     db.query(sql,[CitizenID,Nickname,FnameTH,LnameTH,FnameEN,LnameEN,Type,Sub_Type,Location,zip,Bdate,Email,Phone,ID], (error,result) => {
         if(error) throw error
@@ -542,4 +542,117 @@ router.get('/teacher/getAdvisor',(req,res) => {
     })
 })
 
+router.get('/academic/getList',(req,res) => {
+    let sql = 'SELECT FnameTH,LnameTH,Staff.CitizenID FROM Staff JOIN AcademicAdmin ON AcademicAdmin.citizenID = Staff.CitizenID'
+    db.query(sql,(error,result)=> {
+        if(error) throw error
+        res.json({
+            "status" : true,
+            "data" : result
+        })
+    })
+})
+
+router.get('/sum/student',(req,res) => {
+    let sql = 'SELECT COUNT(ID) FROM Student'
+    db.query(sql,(error,result)=> {
+        if(error) throw error
+        res.json({
+            "status" : true,
+            "data" : result
+        })
+    })
+})
+
+router.get('/sum/staff',(req,res) => {
+    let sql = 'SELECT COUNT(ID) FROM Staff'
+    db.query(sql,(error,result)=> {
+        if(error) throw error
+        res.json({
+            "status" : true,
+            "data" : result
+        })
+    })
+})
+
+router.get('/sum/department',(req,res) => {
+    let sql = 'SELECT COUNT(department_id) FROM Department_list'
+    db.query(sql,(error,result)=> {
+        if(error) throw error
+        res.json({
+            "status" : true,
+            "data" : result
+        })
+    })
+})
+
+router.get('/sum/subject',(req,res) => {
+    let {Term,Year} = req.query
+    let sql = 'SELECT COUNT(ID) FROM Subject WHERE Term = ? AND Year = ?'
+    db.query(sql,[Term,Year],(error,result)=> {
+        if(error) throw error
+        res.json({
+            "status" : true,
+            "data" : result
+        })
+    })
+})
+
+router.get('/sum/level',(req,res) => {
+    let sql = 'SELECT COUNT(idLevel) FROM Level'
+    db.query(sql,(error,result)=> {
+        if(error) throw error
+        res.json({
+            "status" : true,
+            "data" : result
+        })
+    })
+})
+
+router.get('/sum/room',(req,res) => {
+    let {Year} = req.query
+    let sql = 'SELECT COUNT(ClassroomID) FROM Classroom WHERE Year = ?'
+    db.query(sql,Year,(error,result)=> {
+        if(error) throw error
+        res.json({
+            "status" : true,
+            "data" : result
+        })
+    })
+})
+
+router.get('/get/state',(req,res) => {
+    let {Name} = req.query
+    let sql = 'SELECT Status FROM State WHERE Name = ?'
+    db.query(sql,Name,(error,result)=> {
+        if(error) throw error
+        res.json({
+            "status" : true,
+            "data" : result
+        })
+    })
+})
+
+router.get('/update/state',(req,res) => {
+    let sql = 'UPDATE State SET Status = ? WHERE Name = ?'
+    db.query(sql,(error,result)=> {
+        if(error) throw error
+        res.json({
+            "status" : true,
+            "data" : result
+        })
+    })
+})
+
+// router.get('/update/teacher',(req,res) => {
+//     let {Nickname,FnameTH,LnameTH,FnameEN,LnameEN,Sub_Type,Location,zip,Bdate,Email,Phone,CitizenID} = req.query
+//     let sql = 'UPDATE Staff SET Nickname = ?, FnameTH = ?, LnameTH = ?, FnameEN = ?, LnameEN = ?, Sub_Type = ?, Location = ?, zip = ?, Bdate = ?, Email = ?, Phone = ? WHERE CitizenID = ?'
+//     db.query(sql,[Nickname,FnameTH,LnameTH,FnameEN,LnameEN,Sub_Type,Location,zip,Bdate,Email,Phone,CitizenID], (error,result)=> {
+//         if(error) throw error
+//         res.json({
+//             "status" : true,
+//             "data" : result
+//         })
+//     })
+// })
 module.exports = router;
