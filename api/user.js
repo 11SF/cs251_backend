@@ -154,6 +154,7 @@ router.get('/teacher/get/byDepartment',(req,res) => {
 
 router.get('/teacher/get/search',(req,res) => {
     let keyword = req.query.keyword
+    console.log(keyword);
     keyword = '%' + keyword + '%'
     let sql = "SELECT FnameTH,LnameTH,phone,email,Department_list.departmen_name,Staff.CitizenID FROM Staff JOIN Department ON Staff.CitizenID = Department.CitizenID JOIN Department_list ON Department.DepartID = Department_list.department_id WHERE FnameTH LIKE ? OR LnameTH LIKE ? OR FnameEN LIKE ? OR LnameEN LIKE ?"
     db.query(sql,[keyword,keyword,keyword,keyword], (error,result) => {
@@ -402,7 +403,7 @@ router.put('/subject/edit',(req,res) => {
 })
 
 router.delete('/subject/delete',(req,res) => {
-    let {ID} = req.body
+    let {ID} = req.query
     let sql = 'DELETE FROM  Subject WHERE ID = ?'
     
     db.query(sql,[ID], (error,result) => {
@@ -414,8 +415,8 @@ router.delete('/subject/delete',(req,res) => {
     })
 })
 
-router.post('/subject/add', (req,res) => {
-    let {SubjectID,DepartID,SubjectName,Type,Score,Dredit,TeacherCitizenID,TeacherName,Term,Year,level} = req.body
+router.get('/subject/add', (req,res) => {
+    let {SubjectID,DepartID,SubjectName,Type,Score,Dredit,TeacherCitizenID,TeacherName,Term,Year,level} = req.query
     let sql = 'INSERT INTO Subject (SubjectID,DepartID,SubjectName,Type,Score,Dredit,TeacherCitizenID,TeacherName,Term,Year,level) VALUES (?,?,?,?,?,?,?,?,?,?,?)'
 
     db.query(sql,[SubjectID,DepartID,SubjectName,Type,Score,Dredit,TeacherCitizenID,TeacherName,Term,Year,level], (error,result) => {
@@ -439,10 +440,11 @@ router.get('/level/getAll',(req,res) => {
 })
 
 router.get('/level/classroom/getByLevel', (req,res) => {
-    let {level} = req.body
+    let {level} = req.query
     let sql = 'SELECT * FROM Classroom JOIN advisor ON Classroom.ClassroomID = advisor.ClassroomID WHERE Classroom.Level= ?'
     db.query(sql,level, (error,result) => {
         if(error) throw error
+        // console.log(level);
         res.json({
             "status" : true,
             "data" : result
@@ -450,8 +452,21 @@ router.get('/level/classroom/getByLevel', (req,res) => {
     })
 })
 
-router.put('/classroom/edit',(req,res) => {
-    let {ClassroomID,plan,citizenID,fullnameTH,fullnameEN} = req.body
+router.get('/level/add',(req,res)=> {
+    let {idLevel,CitizenID} = req.query
+    let sql = 'INSERT INTO Level (idLevel,CitizenID) VALUES (?,?)'
+    db.query(sql,[idLevel,CitizenID], (error,result) => {
+        if(error) throw error
+        // console.log(level);
+        res.json({
+            "status" : true,
+            "data" : result
+        })
+    })
+})
+
+router.get('/classroom/edit',(req,res) => {
+    let {ClassroomID,plan,citizenID,fullnameTH,fullnameEN} = req.query
     let sql = 'UPDATE  Classroom SET Plan = ? WHERE ClassroomID = ?'
     let sql2 = 'UPDATE  advisor SET citizenID = ?, fullnameTH = ?, fullnameEN = ? WHERE ClassroomID = ?'
     db.query(sql,[plan,ClassroomID], (error,result) => {
@@ -468,6 +483,27 @@ router.put('/classroom/edit',(req,res) => {
     })
 })
 
+router.get("/classroom/add",(req,res1) => {
+    let {Level,Room,Year,Plan,citizenID,fullnameTH,fullnameEN} = req.query
+    fullnameEN = "-"
+    let sql = 'INSERT INTO Classroom (Level,Room,Year,Plan) VALUES (?,?,?,?)'
+    db.query(sql,[Level,Room,Year,Plan],(error,result)=> {
+        if(error) throw error
+        let sql3 = 'SELECT ClassroomID FROM Classroom WHERE Level = ? AND Room = ? AND Year = ?'
+        db.query(sql3,[Level,Room,Year],(error,res)=> {
+            if(error) throw error
+            let sql2 = 'INSERT INTO advisor (ClassroomID,citizenID,fullnameTH,fullnameEN) VALUES (?,?,?,?)'
+            db.query(sql2,[res[0].ClassroomID,citizenID,fullnameTH,fullnameEN],(error,result)=> {
+                if(error) throw error
+                res1.json({
+                    "status" : true,
+                    "msg" : "Update successfully"
+                })
+            })
+        })
+    })
+})
+
 router.post('/student/add', (req,res)=> {
     let {CitizenID,ClassroomID,Nickname,FnameTH,LnameTH,FnameEN,LnameEN,Location,zip,Bdate,email,phone} = req.body
     let sql = 'INSERT INTO Student (CitizenID,ClassroomID,Nickname,FnameTH,LnameTH,FnameEN,LnameEN,Location,zip,Bdate,email,phone) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)'
@@ -481,7 +517,7 @@ router.post('/student/add', (req,res)=> {
 })
 
 router.delete('/student/delete',(req,res)=> {
-    let {ID} = req.body
+    let {ID} = req.query
     let sql = 'DELETE FROM Student WHERE ID = ?'
     db.query(sql,ID,(error,result) => {
         if(error) throw error
@@ -644,15 +680,28 @@ router.get('/update/state',(req,res) => {
     })
 })
 
-// router.get('/update/teacher',(req,res) => {
-//     let {Nickname,FnameTH,LnameTH,FnameEN,LnameEN,Sub_Type,Location,zip,Bdate,Email,Phone,CitizenID} = req.query
-//     let sql = 'UPDATE Staff SET Nickname = ?, FnameTH = ?, LnameTH = ?, FnameEN = ?, LnameEN = ?, Sub_Type = ?, Location = ?, zip = ?, Bdate = ?, Email = ?, Phone = ? WHERE CitizenID = ?'
-//     db.query(sql,[Nickname,FnameTH,LnameTH,FnameEN,LnameEN,Sub_Type,Location,zip,Bdate,Email,Phone,CitizenID], (error,result)=> {
-//         if(error) throw error
-//         res.json({
-//             "status" : true,
-//             "data" : result
-//         })
-//     })
-// })
+router.get('/update/student',(req,res)=> {
+    let {Nickname, FnameTH, LnameTH, FnameEN, LnameEN, Location, zip, Bdate, email,phone, CitizenID} = req.query
+    let sql = 'UPDATE Student SET Nickname = ?, FnameTH = ?, LnameTH = ?, FnameEN = ?, LnameEN = ?, Location = ?, zip = ?, Bdate = ?, email = ?,phone = ? WHERE CitizenID = ?'
+    db.query(sql,[Nickname, FnameTH, LnameTH, FnameEN, LnameEN, Location, zip, Bdate, email,phone, CitizenID],(error,result)=> {
+        if(error) throw error
+        res.json({
+            "status" : true,
+            "data" : result
+        })
+    })
+})
+
+router.get('/update/dependent',(req,res)=> {
+    let {S_CitizenID,Nickname, Fname, Lname,phone, relation} = req.query
+    let sql = 'UPDATE Dependent SET Nickname = ?, Fname = ?, Lname = ?, phone = ?, relation = ? WHERE S_CitizenID = ?'
+    db.query(sql,[Nickname, Fname, Lname, phone, relation, S_CitizenID ],(error,result)=> {
+        if(error) throw error
+        res.json({
+            "status" : true,
+            "data" : result
+        })
+    })
+})
+
 module.exports = router;
