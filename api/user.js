@@ -88,7 +88,6 @@ router.get("/student/get/subject", (req,res) => {
             })
             return;
         }
-        console.log(results)
         res.json({
             "status" : true,
             "data" : results
@@ -136,7 +135,7 @@ router.get('/student/get/gpaTable', (req,res) => {
 })
 
 router.get('/teacher/get/all',(req,res) => {
-    let sql = 'SELECT FnameTH,LnameTH,phone,email FROM Staff WHERE Type = ?'
+    let sql = 'SELECT FnameTH,LnameTH,phone,email,CitizenID FROM Staff WHERE Type = ?'
     db.query(sql,'Teacher', (error,result) => {
         if(error) throw error
         res.json(result)
@@ -275,6 +274,7 @@ router.get('/poll/get/vote', (req,res) => {
 
 router.get('/teacher/get/subject', (req,res)=> {
     let {CitizenID,Term,Year} = req.query
+    console.log(Term);
     let sql = 'SELECT * FROM Subject JOIN Class_Subject_list ON Subject.ID = Class_Subject_list.S_ID JOIN Classroom ON Class_Subject_list.ClassroomID = Classroom.ClassroomID WHERE TeacherCitizenID = ? AND Subject.Term = ? AND Subject.Year = ?'
     db.query(sql,[CitizenID,Term,Year], (error,result) => {
         if(error) throw error
@@ -389,8 +389,9 @@ router.get('/subject/getAll',(req,res) => {
     })
 })
 
-router.put('/subject/edit',(req,res) => {
-    let {ID,SubjectID,DepartID,SubjectName,Type,Score,Dredit,TeacherCitizenID,TeacherName,Term,Year,level} = req.body
+router.get('/subject/edit',(req,res) => {
+    let {ID,SubjectID,DepartID,SubjectName,Type,Score,Dredit,TeacherCitizenID,TeacherName,Term,Year,level} = req.query
+    console.log(req.query);
     let sql = 'UPDATE  Subject SET SubjectID = ?, DepartID = ?, SubjectName = ?, Type = ?, Score = ?, Dredit = ?, TeacherCitizenID = ?, TeacherName = ?, Term = ?, Year = ?, level = ? WHERE ID = ?'
     
     db.query(sql,[SubjectID,DepartID,SubjectName,Type,Score,Dredit,TeacherCitizenID,TeacherName,Term,Year,level,ID], (error,result) => {
@@ -402,6 +403,17 @@ router.put('/subject/edit',(req,res) => {
     })
 })
 
+router.get("/subject/getById",(req,res)=> {
+    let {ID} = req.query
+    let sql = 'SELECT * FROM Subject WHERE ID = ?'
+    db.query(sql,ID,(error,result) => {
+        if(error) throw error
+        res.json({
+            "status" : true,
+            "data" : result
+        })
+    })
+})
 router.delete('/subject/delete',(req,res) => {
     let {ID} = req.query
     let sql = 'DELETE FROM  Subject WHERE ID = ?'
@@ -504,14 +516,27 @@ router.get("/classroom/add",(req,res1) => {
     })
 })
 
-router.post('/student/add', (req,res)=> {
-    let {CitizenID,ClassroomID,Nickname,FnameTH,LnameTH,FnameEN,LnameEN,Location,zip,Bdate,email,phone} = req.body
+router.get('/student/add', (req,res)=> {
+    let  {profile,dependent,ability} = req.query
+    let {CitizenID,ClassroomID,Nickname,FnameTH,LnameTH,FnameEN,LnameEN,Location,zip,Bdate,email,phone} = JSON.parse(profile)
+    console.log(CitizenID);
+    let Ability = ability
     let sql = 'INSERT INTO Student (CitizenID,ClassroomID,Nickname,FnameTH,LnameTH,FnameEN,LnameEN,Location,zip,Bdate,email,phone) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)'
     db.query(sql,[CitizenID,ClassroomID,Nickname,FnameTH,LnameTH,FnameEN,LnameEN,Location,zip,Bdate,email,phone], (error,result) => {
         if(error) throw error
-        res.json({
-            "status" : true,
-            "msg" : "added successfully"
+        let sql2 = 'INSERT INTO Dependent (S_CitizenID,Nickname,Fname,Lname,phone,relation) VALUES(?,?,?,?,?,?)'
+        let {Nickname,Fname,Lname,relation} = JSON.parse(dependent)
+        phone = JSON.parse(dependent).phone
+        db.query(sql2,[CitizenID,Nickname,Fname,Lname,phone,relation], (error,result) => { 
+            if(error) throw error
+        })
+        sql = 'INSERT INTO SpecialAbility (S_CitizenID,Ability) VALUES(?,?)'
+        db.query(sql,[CitizenID,Ability], (error,result) => { 
+            if(error) throw error
+            res.json({
+                "status" : true,
+                "msg" : "added successfully"
+            })
         })
     })
 })
@@ -528,6 +553,22 @@ router.delete('/student/delete',(req,res)=> {
     })
 })
 
+router.get('/staff/add',(req,res)=> {
+    let {CitizenID,Nickname,FnameTH,LnameTH,FnameEN,LnameEN,Type,Sub_Type,Location,zip,Bdate,Email,Phone,department} = req.query
+    let sql = 'INSERT INTO Staff (CitizenID,Nickname,FnameTH,LnameTH,FnameEN,LnameEN,Type,Sub_Type,Location,zip,Bdate,Email,Phone) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)'
+    db.query(sql,[CitizenID,Nickname,FnameTH,LnameTH,FnameEN,LnameEN,Type,Sub_Type,Location,zip,Bdate,Email,Phone], (error,result) => {
+        if(error) throw error
+        let sql2 = 'INSERT INTO Department (DepartID,CitizenID,Type) VALUES(?,?,3)'
+        db.query(sql2,[department,CitizenID], (error,result) => {
+            if(error) throw error
+            res.json({
+                "status" : true,
+                "msg" : "Update successfully"
+            })
+        })  
+    })
+})
+
 router.get('/staff/edit',(req,res) => {
     let {ID,CitizenID,Nickname,FnameTH,LnameTH,FnameEN,LnameEN,Type,Sub_Type,Location,zip,Bdate,Email,Phone} = req.query
     let sql = 'UPDATE Staff SET CitizenID = ?, Nickname = ?, FnameTH = ?, LnameTH = ?, FnameEN = ?, LnameEN = ?, Type = ?, Sub_Type = ?, Location = ?, zip = ?, Bdate = ?, Email = ?, Phone = ? WHERE ID = ?' 
@@ -536,6 +577,22 @@ router.get('/staff/edit',(req,res) => {
         res.json({
             "status" : true,
             "msg" : "Update successfully"
+        })
+    })
+})
+
+router.delete('/staff/delete',(req,res) => {
+    let {CitizenID} = req.query
+    let sql = 'DELETE FROM Staff WHERE CitizenID = ?'
+    db.query(sql,CitizenID,(error,result) => {
+        if(error) throw error
+        sql = 'DELETE FROM Department WHERE CitizenID = ?'
+        db.query(sql,CitizenID,(error,result) => {
+            if(error) throw error
+            res.json({
+                "status" : true,
+                "msg" : "delete successfully"
+            })
         })
     })
 })
@@ -670,12 +727,12 @@ router.get('/get/state',(req,res) => {
 })
 
 router.get('/update/state',(req,res) => {
+    let {Status,Name} = req.query
     let sql = 'UPDATE State SET Status = ? WHERE Name = ?'
-    db.query(sql,(error,result)=> {
+    db.query(sql,[Status,Name],(error,result)=> {
         if(error) throw error
         res.json({
             "status" : true,
-            "data" : result
         })
     })
 })
@@ -703,5 +760,44 @@ router.get('/update/dependent',(req,res)=> {
         })
     })
 })
+
+router.get('/room/addSubject',(req,res)=> {
+    let {ClassroomID,S_ID,S_name,Term} = req.query
+    let sql = 'INSERT INTO Class_Subject_list (ClassroomID,S_ID,S_name,Term) VALUES (?,?,?,?)'
+    db.query(sql,[ClassroomID,S_ID,S_name,Term],(error,result)=> {
+        if(error) throw error
+        res.json({
+            "status" : true,
+            "data" : result
+        })
+    })
+})
+
+router.get('/poll/topVote',(req,res)=> {
+    let sql = 'SELECT Staff.FnameTH,Staff.LnameTH,Review.VoteScore FROM Review JOIN Staff ON Review.T_CitizenID = Staff.CitizenID'
+    db.query(sql,(error,result)=> {
+        if(error) throw error
+        res.json({
+            "status" : true,
+            "data" : result
+        })
+    })
+})
+
+router.delete('/poll/delete',(req,res) => {
+    let sql = 'DELETE FROM Review'
+    db.query(sql,(error,result) => {
+        if(error) throw error
+        sql = 'DELETE FROM Review_log'
+        db.query(sql,(error,result) => {
+            if(error) throw error
+            res.json({
+                "status" : true,
+                "msg" : "delete successfully"
+            })
+        })
+    })
+})
+
 
 module.exports = router;
