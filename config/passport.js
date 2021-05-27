@@ -62,7 +62,7 @@ passport.use(new LocalStrategy (
     }
 ))
 
-const SECRET = "CS251_Key"
+const SECRET = ""
 
 passport.use(new JWTStrategy(
     {
