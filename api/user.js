@@ -799,5 +799,38 @@ router.delete('/poll/delete',(req,res) => {
     })
 })
 
+router.get("/post/getPost",(req,res)=> {
+    let {PostById} = req.query
+    let sql = 'SELECT Post.title,Post.Message,Post.priority,Staff.FnameTH,Staff.LnameTH FROM Post JOIN Staff ON Post.PostById = Staff.CitizenID WHERE priority = ? OR PostById = ?'
+    db.query(sql,["1",PostById],(error,result) => {
+        if(error) throw error
+        res.json({
+            "status" : true,
+            "data" : result
+        })
+    })
+})
+
+router.get("/post/addPost",(req,res)=> {
+    let {title,Message,PostById,priority} = req.query
+    let sql = 'INSERT INTO Post (title,Message,PostById,priority) VALUES(?,?,?,?)'
+    db.query(sql,[title,Message,PostById,priority],(error,result) => {
+        if(error) throw error
+        res.json({
+            "status" : true,
+        })
+    })
+})
+
+router.delete("/post/delete",(req,res)=> {
+    let {idPost} = req.query
+    let sql = 'DELETE FROM Post WHERE idPost = ?'
+    db.query(sql,[idPost],(error,result) => {
+        if(error) throw error
+        res.json({
+            "status" : true,
+        })
+    })
+})
 
 module.exports = router;
